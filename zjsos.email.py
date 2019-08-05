@@ -6,28 +6,6 @@ import tkinter.messagebox
 import win32ui
 from tkinter import *
 import time, easygui
-import os
-ss = time.time()
-d = 0
-try:
-    tf_r = open('time')
-    g = ''
-    for i in tf_r.readlines():
-        g = i
-    if g == '':
-        g = 0
-    d = ss - float(g)
-    tf_r.close()
-except:
-    d = 20001
-if d < 20000:
-    sy = 20000 - d
-    tkinter.messagebox.showinfo("提示", "由于邮箱服务器有单位时间的次数限制，请在"+str(sy)+"秒后再发送邮件")
-    sys.exit()
-
-tf_w = open('time','w')
-tf_w.write(str(ss))
-tf_w.close()
 ##################发送者邮箱与授权码######################
 root = Tk()
 root.title("发送者邮箱")
@@ -112,7 +90,7 @@ def send(email,mess):
     #total_num = total_num + 1
     receivers = email #收件人邮箱
     #print(receivers)
-    subject = '工资条' #主题
+    subject = '工资条测试（请忽略此邮件）' #主题
     content = mess
     #print(content)
     msg = MIMEText(content,'plain','utf-8')
@@ -147,73 +125,45 @@ def send(email,mess):
 #print("全部员工:%s 发送成功:%s 发送失败:%s" %(total_num,sucess_num,fail_num))
 #easygui.msgbox("全部员工:%s 发送成功:%s 发送失败:%s" %(total_num,sucess_num,fail_num), title="发送结果",ok_button="确定")
 
-pnum = 1
-allnum = 0
-dict_email = {}
-email_sy = []
-try:
-    jl_rs = open('发送日志.txt')
-    if jl_rs.read() == '':
-        for j in email_arr:
-            dict_email[j] = '*'
-            email_sy.append(j)
+#out = open('失败名单.txt','w')
+#out.write('\n第一批次:\n')
+def lun(email):
+    print(email)
+    mess = dict[email]
+    #print(mess)
+    stat = send(email, mess)
+    if stat == 1:
+        email_arr.remove(email)
+        print('发送成功')
+        c = c + 1
     else:
-        jl_r = open('发送日志.txt')
-        for i in jl_r.readlines():
-            line = i.split('\t')
-            #print(line)
-            dict_email[line[0]] = line[1].strip('\n')
-            #print(dict_email)
-            #print (line[1])
-            if line[1] == '*\n':
-                email_sy.append(line[0])
-        for j in email_arr:
-            if j not in dict_email.keys():
-                dict_email[j] = '*'
-                email_sy.append(j)
-        jl_r.close()
-    jl_rs.close()
-except:
-    for j in email_arr:
-        dict_email[j] = '*'
-        email_sy.append(j)
+        print(' 发送失败')
+        d = d + 1
+    return c,d
 
-#print(dict_email)
-#print(email_sy)
+cnum = 1
 
-c = 0
-d = 0
-for email in email_sy:
-    if allnum < 70:
-        print(email)
-        allnum = allnum + 1
-        mess = dict[email]
-        stat = send(email, mess)
-        if stat == 1:
-            email_arr.remove(email)
-            print('发送成功')
-            dict_email[email] = '已发送'
-            c = c +1
-        else:
-            print(' 发送失败')
-            d = d +1
-    else:
-        continue
-ba = c + d
-knum = 0
-jl_w = open('发送日志.txt','w')
-for email in dict_email.keys():
-    ddd = email +'\t'+dict_email[email] + '\n'
-    #print(ddd)
-    jl_w.write(ddd)
-    if dict_email[email] == '*':
-        knum = knum +1
-jl_w.close()
-if knum == 0:
+while len(email_arr) >0 :
+    c = 0
+    d = 0
+    email_cg = []
+    nn = 0
+    print('第' + str(cnum)+ '批:')
+    c1,d1 = lun()
+    ba = c1 + d1
+    cnum = cnum +1
+    for email in email_arr:
+        nn = nn + 1
+    if len(email_arr) >0:
+        print('本次共发送'+str(ba)+'个邮箱，成功'+str(c1)+'个，失败'+str(d1)+'个')
+        print('剩余' +str(len(email_arr))+'个邮箱：')
+        print(email_arr)
+        print('暂停180秒，等待下一批发送\n\n')
+        time.sleep(300)
+
+
+#print("全部员工:%s 发送成功:%s 发送失败:%s" %(total_num,sucess_num,fail_num1))
+#easygui.msgbox("全部员工:%s 发送成功:%s 发送失败:%s" %(total_num,sucess_num,fail_num1), title="发送结果",ok_button="确定")
+
+if len(email_arr) == 0:
     print("邮件全部发送成功")
-    os.remove('发送日志.txt')
-else:
-    print('本次共发送' + str(ba) + '个邮箱，成功' + str(c) + '个，失败' + str(d) + '个')
-    print('剩余' + str(knum) + '个邮箱未发送')
-
-
